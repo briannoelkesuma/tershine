@@ -72,16 +72,6 @@ pc = Pinecone(api_key=PINECONE_API_KEY)
 # Initialize the OpenAI embedding model
 embedding_model = OpenAIEmbedding(api_key=OPENAI_API_KEY, model='text-embedding-3-small')
 
-# # Set the tokenizer for `text-embedding-3-small`
-# embedding_encoding = tiktoken.get_encoding("cl100k_base")
-# embedding_model.tokenizer = embedding_encoding.encode  # Tokenizer for embedding model
-
-# llm = OpenAI(model="gpt-4o-mini", api_key=OPENAI_API_KEY,
-#                  system_prompt="You are a helpful assistant. Always respond in English, regardless of the input language.")
-
-# # set a global llm
-# Settings.llm = llm
-
 # List to store content for vector database
 raw_documents = []
 
@@ -197,24 +187,6 @@ vector_index = VectorStoreIndex.from_vector_store(vector_store=vector_store)
 # Callback for printing thought process
 callback_manager = CallbackManager([StdOutCallbackHandler()])
 
-# Step 1: Define the Tools
-
-# 1. RETRIEVAL tool that fetches similar documents from Pinecone
-# def retrieve_from_vectorstore(query_text):
-#     # Embed the query text
-#     query_embedding = embedding_model.get_text_embedding(query_text)
-
-#     # Query Pinecone for similar results
-#     pinecone_results = pinecone_index.query(
-#         vector=query_embedding,
-#         top_k=3,
-#         include_metadata=True
-#     )
-
-#     # Retrieve and combine text
-#     retrieved_texts = [result['metadata']['content'] for result in pinecone_results['matches']]
-#     return " ".join(retrieved_texts)
-
 def retrieve_from_vectorstore(query_text, max_top_k=5, initial_top_k=3, similarity_threshold=0.5):
     attempt = 0
     top_k = initial_top_k
@@ -257,131 +229,13 @@ def retrieve_from_vectorstore(query_text, max_top_k=5, initial_top_k=3, similari
 
     return "OUT_OF_SCOPE"
 
-# retrieval_tool = Tool(
-#     name="pinecone_retriever",
-#     func=retrieve_from_vectorstore,
-#     description="Retrieves relevant documents from the Pinecone vector store."
-# )
 retrieval_tool = Tool(
     name="pinecone_retriever",
     func=lambda query_text: retrieve_from_vectorstore(query_text),
-    description="Retrieves relevant documents from the Pinecone vector store, iteratively expanding top_k if no product links are found."
+    description="Retrieves relevant documents from the Pinecone vector store when there are product links found."
 )
 
-# # 2. RESPONSE GENERATION tool using LLM
-# def generate_response(query_text, context):
-#     if context == "OUT_OF_SCOPE":
-#         return "The query is likely out of scope for the available context, and no relevant information was found."
-        
-#     query_with_context = f"{query_text}\nContext: {context}"
-#     response = llm.generate(query_with_context)
-#     return response
-
-
-# generation_tool = Tool(
-#     name="response_generator",
-#     func=lambda query_text: generate_response(query_text, retrieve_from_vectorstore(query_text)),
-#     description="Generates a response based on the retrieved context."
-# )
-
-# # 3. PRODUCT extraction tool
-# def extract_product_info(context):
-#     product_info = []
-    
-#     # Enhanced pattern to capture URLs with or without Markdown-style descriptions
-#     url_pattern = re.compile(r'(?:\[(.*?)\]\((https?://[^\s)]+)\))|((https?://[^\s)]+))')
-    
-#     matches = url_pattern.findall(context)
-#     for match in matches:
-#         if match[0]:  # Markdown-style match with product name
-#             product_name, product_link = match[0], match[1]
-#             product_info.append(f"Product: {product_name}, Link: {product_link}")
-#         elif match[2]:  # Direct URL without Markdown description
-#             product_info.append(f"Link: {match[2]}")
-    
-#     return "\n".join(product_info) if product_info else "No specific product information found."
-
-# product_extractor_tool = Tool(
-#     name="product_extractor",
-#     func=extract_product_info,
-#     description="Extracts product information and links from the context."
-# )
-
-### FUTURE USE? CAN IGNORE FOR NOW.
-# # 2. WEATHER tool for GREETING
-# def get_stockholm_weather(*args, **kwargs):
-#     meteo_api_key = os.getenv('METEOSOURCE_API_KEY')
-#     try:
-#         # Correct URL for the MeteoSource API with `place_id` usage
-#         meteo_url = "https://www.meteosource.com/api/v1/free/point"
-        
-#         params = {
-#             "place_id": "stockholm",  # Use 'stockholm' as the place_id
-#             "sections": "current",
-#             "language": "en",
-#             "units": "metric",
-#             "key": meteo_api_key
-#         }
-
-#         # Perform the API request
-#         weather_response = requests.get(meteo_url, params=params)
-#         weather_response.raise_for_status()
-#         weather_data = weather_response.json()
-
-#         # Extract weather details
-#         weather_desc = weather_data["current"]["summary"].lower()
-#         temperature = weather_data["current"]["temperature"]
-#         icon_code = weather_data["current"].get("icon")  # Assuming icon code is available
-
-#         # Mapping specific messages based on the icon code
-#         if icon_code in [10, 11, 12, 13, 22]:  # Light rain, Rain, Possible rain, Rain shower, Rain and snow
-#             greeting_message = f"Hey there! It’s currently {weather_desc} and {temperature}°C in Stockholm. " \
-#                                f"Rain can leave water spots on your car's finish. How’s yours looking?"
-
-#         elif icon_code in [16, 17, 18, 19, 34]:  # Light snow, Snow, Possible snow, Snow shower, Snow shower (night)
-#             greeting_message = f"Hey there! It’s {weather_desc} and {temperature}°C in Stockholm. " \
-#                                f"Snow can lead to salt and grime buildup—perfect time for a thorough car wash. " \
-#                                f"Is your car ready for this weather?"
-
-#         elif icon_code in [2, 3, 4, 28]:  # Sunny, Mostly sunny, Partly sunny, Partly clear (night)
-#             greeting_message = f"Hey there! It's a sunny {temperature}°C in Stockholm. " \
-#                                f"Great weather to make that car shine! Is it ready for a day out?"
-
-#         elif icon_code in [5, 6, 7, 31]:  # Mostly cloudy, Cloudy, Overcast, Overcast with low clouds (night)
-#             greeting_message = f"Hey there! It’s cloudy and {temperature}°C in Stockholm. " \
-#                                f"A bit dull outside, but a clean car can still brighten things up. How’s yours looking?"
-
-#         elif icon_code in [9, 15, 24, 36]:  # Fog, Local thunderstorms, Possible freezing rain, Possible freezing rain (night)
-#             greeting_message = f"Hey there! It’s {weather_desc} and {temperature}°C in Stockholm. " \
-#                                f"This weather can be tough on your car. Might be a good idea to give it some extra care!"
-
-#         elif icon_code in [14, 33]:  # Thunderstorm, Local thunderstorms (night)
-#             greeting_message = f"Hey there! Thunderstorms with {temperature}°C in Stockholm. " \
-#                                f"This weather can be rough on cars. Consider giving it some extra care after the storm!"
-
-#         elif icon_code in [23, 25]:  # Freezing rain, Hail
-#             greeting_message = f"Hey there! It’s {weather_desc} and {temperature}°C in Stockholm. " \
-#                                f"These conditions can leave stubborn residue on your car. A wash might be in order!"
-
-#         else:
-#             greeting_message = f"Hey there! It’s {weather_desc} and {temperature}°C in Stockholm. " \
-#                                f"Whatever the weather, a clean car always feels great. Is yours in top shape?"
-
-#         return greeting_message
-
-#     except requests.RequestException:
-#         return "I couldn't fetch the weather data right now. Please try again later."
-
-# # Define the tool
-# weather_tool = Tool(
-#     name="stockholm_weather",
-#     func=get_stockholm_weather,
-#     description="Provides a greeting with Stockholm’s current weather and prompts about car cleaning."
-# )
-
 tools = [retrieval_tool]
-
-# 1. Provide a greeting based on Stockholm’s current weather.
 
 # Step 2: Create the Prompt
 
@@ -391,22 +245,22 @@ template = '''Answer the following questions as best you can. You have access to
 
 Use the following format:
 
-Answer the question by retrieving relevant products from Tershine, with product links, prices, and brief justifications.
-DO NOT GIVE ME IMAGES IN THE OUTPUT.
+Answer the question by retrieving relevant products from Tershine, with product links embedded in your answer, and brief justifications for why the product is recommended.
+DO NOT GIVE ME IMAGES IN THE OUTPUT. 
 
-Use the following action format:
+Use the following format, ensure each step is complete before going to the next step:
 
 Question: the input question you must answer
-Thought: you should always think about what to do
+Thought: you should always think about what to do, do not use any tool if it is not needed. DO NOT REPEAT THE SAME THOUGHT.
 Action: the action to take, should be one of [{tool_names}]
-Action Input: the input to the action
-Observation: the result of the action
+Action Input: the input to the action; DO NOT REPEAT THE SAME ACTION INPUT.
+Observation: the result of the action. Check if observation matches the goal of Tershine products.
 ... (this Thought/Action/Action Input/Observation can repeat N times)
 Thought: If you receive an "OUT_OF_SCOPE" message, do not attempt to answer based on general knowledge. Instead:
 1. Respond that no relevant information is available in the context.
 2. Suggest links or resources where the user may be able to find relevant information.
-
-Final Answer: the final answer to the original input question crafted like a storyline with steps if necessary
+Thought: You must always conclude with a clear and concise Final Answer, even if no action could be taken.
+Final Answer: the final answer to the original input question crafted like a storyline with steps to help answer the question
 
 Begin!
 
@@ -429,17 +283,30 @@ agent_executor = AgentExecutor(agent=agent, tools=tools, callback_manager=callba
 class QueryRequest(BaseModel):
     question: str
 
+DEFAULT_INTRO = "I am your Tershine agent here to be your washing guide helper and recommend you products whenever applicable. We are a premium brand specializing in car care products such as cleaning solutions, degreasers, gloss applicators, and bike cleaners. Our products are formulated to handle dirt, grease, and contaminants found on automotive surfaces."
+
 # API Endpoint for querying the ReAct Agent
 @app.post("/query/")
 async def query_agent(query: QueryRequest):
     try:
         # Pass the input query to the agent executor
-        response = agent_executor.invoke({"input": query.question})
-        
+        response = agent_executor.invoke({"input": DEFAULT_INTRO + query.question.strip()})
+                
         # Extract and return the final response
         return {"response": response}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        error_message = str(e).lower()
+        print(f"Error message: {error_message}")  # Log the actual error message
+        # Check if it's an agent iteration error
+        if "iteration" in error_message or "parsing" in error_message:
+            return {
+                "response": "There was an error processing your question. Please rephrase your query or try again later."
+            }
+
+        # Fallback response for other errors
+        return {
+            "response": "I'm having trouble finding a specific answer. Could you clarify your question or provide more details?"
+        }
     
 # # # Start FastAPI server
 # if __name__ == "__main__":

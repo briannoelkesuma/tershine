@@ -1,4 +1,188 @@
-import re 
+from youtube_transcript_api import YouTubeTranscriptApi
+import json
+import os
+from dotenv import load_dotenv
+from openai import OpenAI
+import time
+import re
 
-results = {'markdown': '![Kall avfettning](https://d3dnwnveix5428.cloudfront.net/store_72f4e2a4-e492-4ff0-8f8a-c603645bdb5c/images/FWa9STerYS8CjIuXid42IqqHVGZKe3hzEfjzSkl9.jpg)\n\nVad är kallavfettning och när ska det användas?\n-----------------------------------------------\n\nVad används kallavfettning till?\n\nVad är kallavfettning och hur ska den användas?\n===============================================\n\n**Vad är kallavfettning?**\n--------------------------\n\n[Kallavfettning](https://tershine.com/sv/products/dissolve-degreaser)\n är ett kraftfullt avfettningsmedel\xa0 som används för att avlägsna envis smuts, olja, fett och annan petroliumbaserad smuts från olika ytor och komponenter. Kallavfettning används inom fordonsunderhåll, verkstäder, industriella anläggningar och hemma i garaget.\n\nKallavfettning löser asfaltsprickar, tjära, olja, diesel, betumen och andra fetter.\n\n### **När ska kallavfettning användas?**\n\nKallavfettning bör användas när du behöver rengöra en yta från petroliumbaserad smuts. Här är några vanliga tillfällen när det är bäst att använda kallavfettning:\n\n*   **Fordonsunderhåll:** För att ta bort olje-, smörjmedels- och vägsmuts från motorer, chassin , lack och fälgar.\n*   **Industriell rengöring:** Används i produktionsanläggningar för att rengöra maskiner, verktyg och utrustning.\n*   **Hemma:** För att avlägsna fett och oljefläckar från garagegolv, gräsklippare och trädgårdsredskap.\n\nTänk på det här när du använder kallavfettning\n----------------------------------------------\n\n![Tryckspruta för kallavfettning](https://d3dnwnveix5428.cloudfront.net/store_72f4e2a4-e492-4ff0-8f8a-c603645bdb5c/images/FOWrz5CTmUCxo17eCkhji8wNhepT8r0vOuHo8XaI.jpg)\n\nTryckspruta för kallavfettning\n\nDu kan inte späda kallavfettning med vatten utan produkten är färdigblandad.\xa0[Kallavfettning säljs på 1L](https://tershine.com/sv/products/dissolve-degreaser)\n,\xa0[5L](https://tershine.com/sv/products/dissolve-degreaser-5000-ml)\n\xa0och\xa0[25L](https://tershine.com/sv/products/dissolve-degreaser-1)\n\xa0vanligtvis och det är bara 1L flaskan som kommer med spraypump till flaskan. För storlekar över 1L använder du Spraypump för kallavfettning. Det är viktigt att använda rätt spraypump då lösningsmedlet kan skada packningarena i pumpen och få den att läcka.\n\n![Flygrostlösare och kallavfettning](https://d3dnwnveix5428.cloudfront.net/store_72f4e2a4-e492-4ff0-8f8a-c603645bdb5c/images/YFNvsYMTTBY8aFG002ZaYsegksePAKJW93I8hqQ7.jpg)\n\nFlygrostlösare och kallavfettning\n\nFör ett optimalt tvättresultat kan du med fördel använda flygrostlösare i kombination med kallavfettning. Applicera då produkterna efter varandra och låt verka i 5-10 min. Tänk på att flygrostlösaren kan torka utan fara medans kallavfettningen inte bör torka. Se även till att bromsar och liknande är svala innan du applicerar produkterna.\n\nHur används kallavfettning?\n---------------------------\n\n  \n\nFör att använda kallavfettning på rätt sätt, följ dessa steg:\n\n*   **Förberedelse:** Se till att ytan är sval och inte står i direkt solljus. Använd [nitrilhandskar](https://tershine.com/sv/products/nitrilhandskar-svarta-100pack/338)\n     när du använder kall avfettning.\n*   **Applicera:** Spraya ut kallavfettningen med en [tryckspruta för kallavfettning](https://tershine.com/sv/products/pump-sprayer)\n     jämnt över ytan som ska rengöras.\n*   **Verka:** Låt [kall avfettningen](https://tershine.com/sv/products/dissolve-degreaser)\n     verka i 5-10 minuter för bästa resultat. Detta ger det tid att lösa upp och bryta ner smuts och olja.\n*   **Skölj noggrant:** Spola av ytan med vatten eller använd en högtryckstvätt för att avlägsna alla rester av avfettningsmedlet och löst smuts.\n\nAtt [använda kallavfettning](https://tershine.com/sv/products/dissolve-degreaser-5000-ml)\n korrekt gör stor skillnad i resultatet när du tvättar din bil. Du kan med fördel använda kallavfettning i kombination med [Alkalisk avfettning](https://tershine.com/sv/products/exctract-degreaser)\n och [flygrostlösare](https://tershine.com/sv/products/relive)\n. Att använda avfettning innan tvätt av din bil minimerar risken för repor och skador i lacken.\n\nKallavfettning, flygrostlösare och Spraypump\n--------------------------------------------\n\n[![Dissolve - Kallavfettning 1 L](https://nycdn.nyehandel.se/store_72f4e2a4-e492-4ff0-8f8a-c603645bdb5c/images/Ufgs9O9sA3L64Mm0EghxmVH98vNrXNw44oocoWXt.png?width=400&height=400 "Dissolve - Kallavfettning 1 L")](https://tershine.com/sv/products/dissolve-kallavfettning)\n\n[Dissolve - Kallavfettning 1 L](https://tershine.com/sv/products/dissolve-kallavfettning)\n\n139 kr\n\nLägg i varukorgen\n\n[![kallavfettning kall avfettning avfettning avfetta lösa tjära asfalt sot diesel bitumen asfaltsprickar asfaltsfläckar](https://nycdn.nyehandel.se/store_72f4e2a4-e492-4ff0-8f8a-c603645bdb5c/images/FZ7sDLZry6uKKhaFVZWaKycEqnwPDuBdfx0KNOqX.png?width=400&height=400 "tershine Dissolve kallavfettning 5l")](https://tershine.com/sv/products/dissolve-kallavfettning-5000ml)\n\n[Dissolve - Kallavfettning 5 L](https://tershine.com/sv/products/dissolve-kallavfettning-5000ml)\n\n498 kr\n\nLägg i varukorgen\n\n[![spraypump kallavfettning avfettningsspruta spruta för avfettning pumpspruta avfettning](https://nycdn.nyehandel.se/store_72f4e2a4-e492-4ff0-8f8a-c603645bdb5c/images/kcheklyTTrKVCVPy2d3Ll71PVH5GmOtWOiAxHLYt.png?width=400&height=400 "tershine spraypump kallavfettning")](https://tershine.com/sv/products/tryckspruta-kallavfettning)\n\n[Tryckspruta - Kallavfettning](https://tershine.com/sv/products/tryckspruta-kallavfettning)\n\n349 kr\n\nLägg i varukorgen\n\n[![Relive - Flygrostborttagare 500 ml](https://nycdn.nyehandel.se/store_72f4e2a4-e492-4ff0-8f8a-c603645bdb5c/images/ET5La0etrYXoTyF60JtMJbnZ89OrelwEyaKAxab3.png?width=400&height=400 "Relive - Flygrostborttagare 500 ml")](https://tershine.com/sv/products/relive-flygrostborttagare)\n\n[Relive - Flygrostborttagare 500 ml](https://tershine.com/sv/products/relive-flygrostborttagare)\n\n198 kr\n\nLägg i varukorgen\n\nVad menas med kallavfettning?\n-----------------------------\n\n  \nKallavfattning är ett samlingsnamn för avfettning som löser petroleumbaserad smuts så som asfalt, bensin, diesel, olja osv. Den används mest under vinterhalvåret.  \n\nKan man späda ut kallavfettning?\n--------------------------------\n\n  \nNej, då kallavfettning normalt består av lösningsmedel så kommer den inte blanda sig med vatten. Däremot går den bra att använda på blöt bil.  \n\nÄr kallavfettning bra?\n----------------------\n\n  \nKallavfettning måste man använda för att lösa upp all smuts som inte är organisk.  \n\nSammanfattning kallavfettning\n-----------------------------\n\n  \nKallavfettning är ett oumbärligt rengöringsmedel för att effektivt avlägsna petroleumbaserad smuts som asfalt, olja och fett från din bil. Genom att använda kallavfettning korrekt kan du säkerställa att din bils ytor förblir rena och fria från envis smuts, vilket minimerar risken för lackskador och ger ett optimalt tvättresultat. För bästa effekt, kombinera kallavfettning med andra rengöringsprodukter som flygrostlösare. Håll ditt fordon i toppskick med rätt underhållsrutiner och produkter anpassade för varje behov.\n\n![](https://nyehandel-storage.s3.eu-north-1.amazonaws.com/store_72f4e2a4-e492-4ff0-8f8a-c603645bdb5c/files/media/tershine-black.png)\n\n© tershine AB #tershine\n\n![](https://nyehandel-storage.s3.eu-north-1.amazonaws.com/store_72f4e2a4-e492-4ff0-8f8a-c603645bdb5c/files/media/paymentsny1.png)\n\nCookies\n\nVi använder cookies\n\nVi använder cookies för att vår webbplats ska fungera och erbjuda dig bästa upplevelse. Bekräfta ditt samtycke genom att trycka på godkänn alla eller anpassa via inställningar\n\nNödvändigaNödvändiga\n\nNödvändiga cookies är de som behövs för att sajten ska fungera korrekt. Utan dessa cookies fungerar inte grundläggande funktioner såsom sidnavigering och inloggningsmöjlighet till ditt användarkonto. Vi samlar även in viss information genom cookies i analytiskt syfte för att förbättra vår sajt och ge oss information om effekten av vår marknadsföring. I vissa fall delas sådan cookiedata med våra partners, exempelvis vid affiliate-marknadsföring där vi delar ett pseudonymiserat ordernummer för att koppla ihop försäljning och returer med trafik från dessa partners. IP-adresser delas i vissa fall med sådana partners för att undvika bedrägerier men sparas inte längre än nödvändigt. Behandling av cookies i denna kategori baseras på vårt berättigade intresse att förstå och förbättra hur våran sajt används och för att kunna ersätta våra partners för köp på vår sajt som kommit via deras kanaler.\n\nAnalys och statistikAnalys och statistik\n\nDessa cookies ger oss information om hur användarupplevelsen av vår webbplats fungerar och ger oss möjlighet att jobba med förbättringar av användarvänligheten, kundservice och andra liknande funktioner.\n\nPersonaliseringPersonalisering\n\nVi använder information om hur du använder vår sajt, din köphistorik och andra identifierare för att erbjuda dig en bättre upplevelse av vår sajt som anpassas efter dina preferenser. Detta innebär att du kan få personliga kampanjer visade för dig och erbjudanden som är anpassade efter produkter som du tycker om.\n\nMarknadsföringMarknadsföring\n\nMarknadsföringscookies används för annonsering där vi med hjälp av våra samarbetspartners kan kommunicera den typ av erbjudanden som vi bedömer är mest relevanta för dig och dina preferenser.\n\nGloss it!Spara', 'metadata': {'title': 'Vad är kallavfettning och när ska det användas?', 'description': 'Här kan du läsa om hur du använder kallavfettning eller som många söker efter kall avfettning och när det ska användas. Allt om att använda kall avfettning.', 'language': 'sv', 'ogTitle': 'Vad är kallavfettning och när ska det användas?', 'ogDescription': 'Här kan du läsa om hur du använder kallavfettning eller som många söker efter kall avfettning och när det ska användas. Allt om att använda kall avfettning.', 'ogUrl': 'https://tershine.com/sv/page/vad-ar-kallavfettning-och-nar-ska-det-anvandas', 'ogLocaleAlternate': [], 'ogSiteName': 'tershine AB', 'viewport': 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0', 'csrf-token': 'DrfuzRTtw9fhEnUYZNI2B6nSZpzw4gYFnuZNYyj9', 'og:title': 'Vad är kallavfettning och när ska det användas?', 'twitter:title': 'Vad är kallavfettning och när ska det användas?', 'twitter:card': 'summary', 'og:description': 'Här kan du läsa om hur du använder kallavfettning eller som många söker efter kall avfettning och när det ska användas. Allt om att använda kall avfettning.', 'og:site_name': 'tershine AB', 'author': 'tershine AB', 'og:logo': 'https://d3dnwnveix5428.cloudfront.net/store_72f4e2a4-e492-4ff0-8f8a-c603645bdb5c/images/UuXsAWFzPYfWXyC1675686115.png', 'og:url': 'https://tershine.com/sv/page/vad-ar-kallavfettning-och-nar-ska-det-anvandas', 'sourceURL': 'https://tershine.com/sv/page/vad-ar-kallavfettning-och-nar-ska-det-anvandas', 'statusCode': 200}}
-print(re.sub(r'[^\x00-\x7F]+', '', results['metadata']['og:title']))
+# 1. group the transcript by theme and questions or input from users that could lead to that statement being said.
+# 2. tag each of them together for the jsonl
+# 3. now use this  to  Create JSONL for Chat Completion for finetuning purposes
+# it should be in english. the questions.
+# system should be along the lines of you are tobbe, an enthusiastic car wash detailer sharing your process for cleaning and restoring vehicles.
+
+
+client = OpenAI()
+
+load_dotenv()
+
+# Set your OpenAI API key
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+
+# Function to fetch and save english transcript
+def get_english_transcript(video_id, output_file):
+    try:
+        # Get the transcript for the video
+        transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=['en'])
+        
+        # Save the transcript to a file
+        with open(output_file, 'w', encoding='utf-8') as f:
+            for entry in transcript:
+                text = entry['text']
+                if not re.search(r'\bMusic\b|♪|♫', text, re.IGNORECASE):  # Adjust pattern as needed
+                    f.write(f"{entry['start']}: {text}\n")
+        
+        print(f"english transcript saved to {output_file}.")
+    except Exception as e:
+        print(f"Error fetching transcript: {e}")
+
+
+# def preprocess_transcript_to_sentences(input_files, output_file="processed_transcript.jsonl"):
+#     combined_text = ""
+
+#     # Step 1: Combine all text from input files into one large chunk
+#     for input_file in input_files:
+#         with open(input_file, 'r', encoding='utf-8') as f:
+#             for line in f:
+#                 if ':' in line:
+#                     text = line.split(':', 1)[1].strip()  # Get text after the timestamp
+#                     combined_text += " " + text
+
+#     # Step 2: Split the combined text into sentences
+#     sentences = re.split(r'(?<=[.!?]) +', combined_text.strip())
+
+#     # Step 4: Save the chunks to a JSONL file
+#     with open(output_file, 'w', encoding='utf-8') as out_f:
+#         for idx, sentence in enumerate(sentences):
+#             json_entry = {"chunk_id": idx + 1, "text": sentence}
+#             out_f.write(json.dumps(json_entry) + '\n')
+
+#     print(f"Processed transcript saved to {output_file}")
+
+# Function to preprocess transcript into JSONL format
+def preprocess_transcript_to_jsonl(input_files, output_file="combined_transcript.jsonl"):
+    try:
+        with open(output_file, 'w', encoding='utf-8') as out_f:
+            for input_file in input_files:
+                with open(input_file, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        # Split the line at the first occurrence of ':' and take the second part
+                        if ':' in line:
+                            text = line.split(':', 1)[1].strip()  # Get text after the timestamp
+                            # Create a JSON object
+                            json_entry = {"prompt": "Respond in this tone:", "completion": text}
+                            # Write the JSON object as a line in the output file
+                            out_f.write(json.dumps(json_entry) + '\n')
+
+        print("Combined transcript saved to", output_file)
+
+    except Exception as e:
+        print(f"Error processing transcript: {e}")
+
+def fine_tune_model(dataset_path):
+    print("Uploading and creating fine-tuning job...")
+    try:
+        # Check if the JSONL file exists and read it
+        if not os.path.exists(dataset_path):
+            print(f"Dataset file {dataset_path} does not exist.")
+            return
+
+        with open(dataset_path, "rb") as f:
+            responses = client.files.create(file=f, purpose="fine-tune")
+
+        # Create fine-tuning job
+        fine_tune_job = client.fine_tuning.jobs.create(
+            training_file=responses.id,
+            model="gpt-4o-mini-2024-07-18"  # Replace with your desired model
+        )
+        print(f"Fine-tune job started. Job ID: {fine_tune_job.id}")
+
+        # Wait for the fine-tuning job to complete
+        while True:
+            job_status = client.fine_tuning.jobs.retrieve(fine_tune_job.id)
+            print(f"Current job status: {job_status}")
+            if job_status.status in ['succeeded', 'failed']:
+                break
+            time.sleep(10)  # Wait for a while before checking again
+
+        if job_status.status == 'succeeded':
+            fine_tuned_model = job_status.fine_tuned_model
+            print(f"Fine-tuning completed. Fine-tuned model ID: {fine_tuned_model}")
+            return fine_tuned_model
+        else:
+            print("Fine-tuning failed.")
+            return None
+
+    except Exception as e:
+        print(f"Error during fine-tuning: {e}")
+        return None
+
+def chat_with_model(fine_tuned_model):
+    print("You can start chatting with the fine-tuned model. Type 'quit' or 'q' to exit.")
+    while True:
+        user_input = input("User: ")
+        if user_input.lower() in ["quit", "q"]:
+            print("Goodbye!")
+            break
+        if not user_input.strip():  # Check if user input is empty
+            print("Please enter a valid message.")
+            continue
+        try:
+            messages = [
+                {"role": "system", "content": "Respond in the way you are trained to respond"},
+                {"role": "user", "content": user_input}
+            ]
+            print("Messages being sent to the API:", messages)  # Debugging line
+            print(f"Using model: {fine_tuned_model}")  # Debugging model name
+            
+            completion = client.chat.completions.create(
+                model=fine_tuned_model,
+                messages=messages
+            )
+            
+            # Print the entire completion response
+            print("Completion Response:", completion)
+            
+            # Check if the response contains choices
+            if completion.choices:
+                response = completion.choices[0].message.content
+                print(f"Model: {response}\n")
+            else:
+                print("No choices returned in the completion response.")
+                
+        except Exception as e:
+            print(f"Error generating response: {e}")
+
+# Main function to execute the workflow
+def main():
+    video_urls = [
+        # "https://www.youtube.com/watch?v=RTMQrX-g5X4",
+        "https://www.youtube.com/watch?v=XrmyWILTesY&ab_channel=tershine",
+        # "https://www.youtube.com/watch?v=bMrep-F0fsY&ab_channel=tershine",
+        # "https://www.youtube.com/watch?v=k49aBReCTIU&ab_channel=tershine",
+        # "https://www.youtube.com/watch?v=bhVKRhBVV5M&ab_channel=tershine"
+    ]
+
+    transcript_files = []
+
+    # Fetch transcripts for multiple videos
+    for idx, video_url in enumerate(video_urls):
+        video_id = video_url.split("v=")[1]
+        output_file = f"english_transcript_{idx + 1}.txt"
+        get_english_transcript(video_id, output_file)
+        transcript_files.append(output_file)
+
+    # Preprocess all transcripts into a single JSONL file
+    preprocess_transcript_to_jsonl(transcript_files)
+
+    # Fine-tune the model
+    fine_tuned_model = fine_tune_model("combined_transcript.jsonl")
+
+    if fine_tuned_model:
+        chat_with_model(fine_tuned_model)
+    else:
+        print("Fine-tuning was unsuccessful. Exiting.")
+
+if __name__ == "__main__":
+    main()

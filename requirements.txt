@@ -6,6 +6,7 @@ llama-index
 llama-index-vector-stores-pinecone
 llama-index-embeddings-openai
 tiktoken
+pinecone
 
 nltk
 scipy
@@ -22,3 +23,6 @@ uvicorn
 #frontend
 streamlit
 streamlit_chat
+
+#voice stuff
+youtube-transcript-api
