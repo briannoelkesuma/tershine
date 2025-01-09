@@ -18,6 +18,7 @@ from requests.exceptions import HTTPError
 # from langchain.chat_models import ChatOpenAI
 # from llama_index.llms.openai import OpenAI
 from langchain.agents import initialize_agent, AgentType, Tool
+from langchain.memory import ConversationBufferMemory
 
 from langchain import hub
 from langchain_core.prompts import PromptTemplate
@@ -239,9 +240,14 @@ tools = [retrieval_tool]
 
 # Step 2: Create the Prompt
 
-template = '''Answer the following questions as best you can. You have access to the following tools:
+# Define ReAct agent templates for each language
+PROMPT_TEMPLATE_EN = '''
+Answer the following questions as best you can. You have access to the following tools:
 
 {tools}
+
+Chat history:
+{chat_history}
 
 Use the following format:
 
@@ -267,30 +273,82 @@ Begin!
 Question: {input}
 Thought:{agent_scratchpad}'''
 
-prompt = PromptTemplate.from_template(template)
+PROMPT_TEMPLATE_SE = '''
+Svar på följande frågor så bra du kan. Du har tillgång till följande verktyg:
+
+{tools}
+
+Chathistorik:
+{chat_history}
+
+Använd följande format:
+
+Besvara frågan genom att hämta relevanta produkter från Tershine, med produktlänkar inbäddade i ditt svar, och kortfattade motiveringar till varför produkten rekommenderas.
+ANVÄND INTE BILDER I SVARET.
+
+Använd följande format, se till att varje steg är klart innan du går vidare till nästa steg:
+
+Fråga: frågan du måste besvara
+Tanke: tänk alltid på vad du ska göra, använd inget verktyg om det inte behövs. UPPREPA INTE SAMMA TANKE.
+Åtgärd: åtgärden att vidta, bör vara en av [{tool_names}]
+Åtgärdsindata: indata till åtgärden; UPPREPA INTE SAMMA ÅTGÄRDSINDATA.
+Observation: resultatet av åtgärden. Kontrollera om observationen matchar målet med Tershine-produkterna.
+... (detta Tanke/Åtgärd/Åtgärdsindata/Observation kan upprepas N gånger)
+Tanke: Om du får ett "OUT_OF_SCOPE"-meddelande, försök inte svara baserat på allmän kunskap. Gör istället följande:
+1. Svara att ingen relevant information finns i kontexten.
+2. Föreslå länkar eller resurser där användaren kan hitta relevant information.
+Tanke: Du måste alltid avsluta med ett tydligt och kortfattat slutligt svar, även om ingen åtgärd kunde vidtas.
+Slutligt svar: det slutliga svaret på den ursprungliga frågan som utformats som en berättelse med steg för att hjälpa till att besvara frågan.
+
+Börja!
+
+Fråga: {input}
+Tanke:{agent_scratchpad}'''
 
 # Step 3: Initialize the ReAct Agent
 
 llm = ChatOpenAI(model="gpt-4o-mini", api_key=OPENAI_API_KEY)  # Assuming gpt-4o-mini model in use
-agent = create_react_agent(llm, tools, prompt)
 
-# Step 4: Set up the Agent Executor
-
-agent_executor = AgentExecutor(agent=agent, tools=tools, callback_manager=callback_manager, handle_parsing_errors=True)
+memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
 
 # Step 5: Run a Query through the ReAct Agent
 # Request model for FastAPI
 class QueryRequest(BaseModel):
     question: str
+    language: str  # Expecting "EN" or "SE" from the frontend session state
 
-DEFAULT_INTRO = "I am your Tershine agent here to be your washing guide helper and recommend you products whenever applicable. We are a premium brand specializing in car care products such as cleaning solutions, degreasers, gloss applicators, and bike cleaners. Our products are formulated to handle dirt, grease, and contaminants found on automotive surfaces."
+DEFAULT_INTRO_EN = (
+    "I am your Tershine agent here to be your washing guide helper and recommend you products whenever applicable. "
+    "We are a premium brand specializing in car care products such as cleaning solutions, degreasers, gloss applicators, and bike cleaners. "
+    "Our products are formulated to handle dirt, grease, and contaminants found on automotive surfaces."
+)
+
+DEFAULT_INTRO_SE = (
+    "Jag är din Tershine-assistent här för att hjälpa dig med tvättguide och rekommendera produkter när det är tillämpligt. "
+    "Vi är ett premiumvarumärke som specialiserar sig på bilvårdsprodukter såsom rengöringslösningar, avfettningsmedel, glansapplicatorer och cykelrengöringsmedel. "
+    "Våra produkter är formulerade för att hantera smuts, fett och föroreningar på bilens ytor."
+)
 
 # API Endpoint for querying the ReAct Agent
 @app.post("/query/")
 async def query_agent(query: QueryRequest):
+    if query.language == "SE":  # Swedish
+        default_intro = DEFAULT_INTRO_SE
+        prompt_template = PROMPT_TEMPLATE_SE
+    else:  # Default to English
+        default_intro = DEFAULT_INTRO_EN
+        prompt_template = PROMPT_TEMPLATE_EN
+
+    # Create a new prompt template instance
+    prompt = PromptTemplate.from_template(prompt_template)
+
+    agent = create_react_agent(llm, tools, prompt)
+
+    agent_executor = AgentExecutor(agent=agent, tools=tools, callback_manager=callback_manager, handle_parsing_errors=True, memory=memory)
+
     try:
         # Pass the input query to the agent executor
-        response = agent_executor.invoke({"input": DEFAULT_INTRO + query.question.strip()})
+        response = agent_executor.invoke({"input": default_intro + " " + query.question.strip()})
                 
         # Extract and return the final response
         return {"response": response}
@@ -300,12 +358,13 @@ async def query_agent(query: QueryRequest):
         # Check if it's an agent iteration error
         if "iteration" in error_message or "parsing" in error_message:
             return {
-                "response": "There was an error processing your question. Please rephrase your query or try again later."
+                "response": "Det uppstod ett fel när din fråga behandlades. Omformulera din fråga eller försök igen senare." if language == "sv"
+                else "There was an error processing your question. Please rephrase your query or try again later."
             }
 
-        # Fallback response for other errors
         return {
-            "response": "I'm having trouble finding a specific answer. Could you clarify your question or provide more details?"
+            "response": "Jag har svårt att hitta ett specifikt svar. Kan du omformulera din fråga eller ge fler detaljer?" if language == "sv"
+            else "I'm having trouble finding a specific answer. Could you clarify your question or provide more details?"
         }
     
 # # # Start FastAPI server
