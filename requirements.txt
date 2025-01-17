@@ -1,28 +1,20 @@
-requests
-pinecone-client
-firecrawl
+fastapi
+pydantic
+langdetect
+langchain
+langchain-core
+langchain-community
+langchain-openai
 python-dotenv
+firecrawl
 llama-index
-llama-index-vector-stores-pinecone
-llama-index-embeddings-openai
-tiktoken
-pinecone
-
+pinecone-client
 nltk
 scipy
+tiktoken
 
-langchain
-langchain_community
-langchain_openai
-# llama_index.llms.langchain
+langgraph
 
-#backend
-fastapi
-uvicorn
-
-#frontend
+# frontend
 streamlit
-streamlit_chat
-
-#voice stuff
-youtube-transcript-api
+requests

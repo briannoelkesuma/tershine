@@ -7,21 +7,18 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 import os
-import time
 import json
-import requests
-import pinecone
-import uuid
 import re
 from requests.exceptions import HTTPError
+from langdetect import detect
 
 # from langchain.chat_models import ChatOpenAI
 # from llama_index.llms.openai import OpenAI
-from langchain.agents import initialize_agent, AgentType, Tool
+from langchain.memory import ConversationBufferMemory
 
 from langchain import hub
-from langchain_core.prompts import PromptTemplate
 from langchain.agents import AgentExecutor, create_react_agent, Tool
+from langchain_core.prompts import PromptTemplate
 # from langchain_community.llms import OpenAI
 # from langchain_community.llms.openai import OpenAI  # Ensure langchain-community is installed
 from langchain_openai import ChatOpenAI
@@ -54,6 +51,8 @@ from llama_index.core.postprocessor import SimilarityPostprocessor
 import tiktoken
 
 load_dotenv()
+
+global_language = "en"  # Default language
 
 # Initialize FastAPI
 app = FastAPI()
@@ -139,8 +138,8 @@ index_name = "tershine"
 
 # Connect to the Pinecone index
 pinecone_index = pc.Index(index_name)
-print(f"Connected to Pinecone index '{index_name}'.")
-print(pc.list_indexes())
+# print(f"Connected to Pinecone index '{index_name}'.")
+# print(pc.list_indexes())
 
 def split_text(text, max_length=1536):
     sentences = sent_tokenize(text)
@@ -153,6 +152,15 @@ def split_text(text, max_length=1536):
     if current_chunk:
         chunks.append(current_chunk)
     return chunks
+
+def identify_language(query: str) -> str:
+    """Identify the language of the query using langdetect."""
+    try:
+        language = detect(query)
+        return language
+    except Exception as e:
+        print(f"Error identifying language: {e}")
+        return "en"  # Default to English if detection fails
 
 # TODO: Uncomment when need to upload new embeddings!
 # Step 3: Use LlamaIndex with OpenAI Embeddings for Vector Database
@@ -206,6 +214,8 @@ def retrieve_from_vectorstore(query_text, max_top_k=5, initial_top_k=3, similari
         if not pinecone_results['matches']:
             print("No relevant results found in the vector store.")
             return "OUT_OF_SCOPE"  # Signal for out-of-scope query
+
+        print(pinecone_results['matches'])
         
         # Retrieve text and calculate similarity for the top result
         retrieved_texts = " ".join([result['metadata']['content'] for result in pinecone_results['matches']])
@@ -239,28 +249,40 @@ tools = [retrieval_tool]
 
 # Step 2: Create the Prompt
 
-template = '''Answer the following questions as best you can. You have access to the following tools:
+template = '''Answer the following questions as best you can in the language of the input ONLY. 
+
+It is either swedish or english only.
+
+Example:
+1. Input: Vilken typ av avfettning ska jag använda? in sv then you will reply in SWEDISH!
+2. Input: What type of degreaser should I use? in en then you will reply in ENGLISH!
+
+You have access to the following tools:
 
 {tools}
 
+Chat history:
+{chat_history}
+
 Use the following format:
 
-Answer the question by retrieving relevant products from Tershine, with product links embedded in your answer, and brief justifications for why the product is recommended.
+Answer the question as best as you can, but always provide the product title as embedded links from the tools, and brief justifications for why the product is recommended.
+
 DO NOT GIVE ME IMAGES IN THE OUTPUT. 
 
-Use the following format, ensure each step is complete before going to the next step:
+Use the following action format, ensure each step is DONE before going to the next step:
 
-Question: the input question you must answer
-Thought: you should always think about what to do, do not use any tool if it is not needed. DO NOT REPEAT THE SAME THOUGHT.
-Action: the action to take, should be one of [{tool_names}]
+Question: the input question you must answer in the language of the input ONLY.
+Thought: you should always think about what to do, DO NOT REPEAT THE SAME THOUGHT.
+Action: the action to take, should be one of [{tool_names}] which is retrieval_tool ONLY.
 Action Input: the input to the action; DO NOT REPEAT THE SAME ACTION INPUT.
-Observation: the result of the action. Check if observation matches the goal of Tershine products.
+Observation: the result of the action. Check if observation matches the goal of Tershine products. Do not infer or create links that are not explicitly mentioned in the retrieved data. Ensure that product links are directly retrieved from the context provided by the Pinecone retriever tool.
 ... (this Thought/Action/Action Input/Observation can repeat N times)
 Thought: If you receive an "OUT_OF_SCOPE" message, do not attempt to answer based on general knowledge. Instead:
 1. Respond that no relevant information is available in the context.
 2. Suggest links or resources where the user may be able to find relevant information.
 Thought: You must always conclude with a clear and concise Final Answer, even if no action could be taken.
-Final Answer: the final answer to the original input question crafted like a storyline with steps to help answer the question
+Final Answer: the final answer to the original input question crafted like a storyline with step by step instructions and guide to help answer the question and structure your answer in point form and paragraph.
 
 Begin!
 
@@ -271,26 +293,40 @@ prompt = PromptTemplate.from_template(template)
 
 # Step 3: Initialize the ReAct Agent
 
-llm = ChatOpenAI(model="gpt-4o-mini", api_key=OPENAI_API_KEY)  # Assuming gpt-4o-mini model in use
+llm = ChatOpenAI(model="gpt-4-turbo-preview", api_key=OPENAI_API_KEY)  # Assuming gpt-4o-mini model in use
 agent = create_react_agent(llm, tools, prompt)
+
+memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
 
 # Step 4: Set up the Agent Executor
 
-agent_executor = AgentExecutor(agent=agent, tools=tools, callback_manager=callback_manager, handle_parsing_errors=True)
+agent_executor = AgentExecutor(agent=agent, tools=tools, callback_manager=callback_manager, handle_parsing_errors=True, memory=memory)
 
-# Step 5: Run a Query through the ReAct Agent
+# Step 5: Run a Query through the ReAct A gent
 # Request model for FastAPI
 class QueryRequest(BaseModel):
     question: str
 
-DEFAULT_INTRO = "I am your Tershine agent here to be your washing guide helper and recommend you products whenever applicable. We are a premium brand specializing in car care products such as cleaning solutions, degreasers, gloss applicators, and bike cleaners. Our products are formulated to handle dirt, grease, and contaminants found on automotive surfaces."
+# DEFAULT_INTRO = "I am your Tershine agent here to be your washing guide helper. We are a premium brand specializing in car care products such as cleaning solutions, degreasers, gloss applicators, and bike cleaners. Respond in SWEDISH 'SV' ONLY."
 
 # API Endpoint for querying the ReAct Agent
 @app.post("/query/")
 async def query_agent(query: QueryRequest):
+    global global_language  # Declare the global variable
     try:
-        # Pass the input query to the agent executor
-        response = agent_executor.invoke({"input": DEFAULT_INTRO + query.question.strip()})
+        # Step 1: Detect the query's language
+        detected_language = identify_language(query.question)
+
+        global_language = detected_language  # Set the global language variable
+        print(f"Detected language: {global_language}")
+
+        combined_input = {
+            "input": f"{query.question.strip()} in {global_language}"
+        }
+        response = agent_executor.invoke(combined_input)
+
+        # Step 3: Pass the combined input to the agent executor
+        # response = agent_executor.invoke(combined_input)
                 
         # Extract and return the final response
         return {"response": response}
