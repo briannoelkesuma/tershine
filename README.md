@@ -100,16 +100,3 @@ python app.py  # or use npm/yarn if frontend is JS-based
 Visit `http://localhost:<PORT>` in your browser to interact with the system.
 
 ---
-
-## 🤝 Contributing
-
-1. Fork the repo and create your branch (`git checkout -b feature/your-feature`)  
-2. Commit your changes (`git commit -m 'Add some feature'`)  
-3. Push to the branch (`git push origin feature/your-feature`)  
-4. Open a Pull Request
-
----
-
-## 📄 License
-
-*Add your license here (e.g., MIT, Apache 2.0, etc.)*
