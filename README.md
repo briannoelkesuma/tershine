@@ -72,18 +72,13 @@ pip install -r requirements.txt
 
 ### 3. Build Vector Index
 
-- Run indexing scripts in `vector_index/` or via `backend_langgraph.py`  
-- This populates the vector store for semantic retrieval  
+- Run indexing scripts in `vector_index/`  
+- This populates the vector store for semantic retrieval via Retrieval Augmented Generation (RAG)
 
 ### 4. Query Interface
 
-- `backend.py`: Main backend logic using your preferred method  
-- `frontend/`: Serve the UI (Flask/FastAPI or JS) that queries the backend  
-
-### 5. Testing & Validation
-
-- `validation.py`: Schema and constraint checks (optional)  
-- `test.py`: Initial testing setup (expand using `pytest`)  
+- `backend.py`: Main backend logic  
+- `frontend/`: Serve the Streamlit UI (FastAPI) that queries the backend  
 
 ---
 
