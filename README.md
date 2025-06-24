@@ -10,7 +10,13 @@ A Python-based toolkit for scraping, vector indexing, and querying product and g
 - Vector indexing for retrieving semantically relevant information  
 - Multiple backends supported: basic, LangGraph, and custom logic  
 - Validation and testing functionality for development  
-- Front‑end component for interactive querying  
+- Front‑end component for interactive querying
+  
+---
+
+## 🚀 Project Visualization
+
+![GitDiagram](https://github.com/user-attachments/assets/2549b8e2-6029-44b5-a74a-54ad171d7ed3)
 
 ---
 
