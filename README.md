@@ -1,16 +1,16 @@
 🌟 TerShine
-A Python-based toolkit for scraping, vector-indexing, and querying product and guide data. Ideal for building question‑answering tools or recommendation systems utilizing both structured and unstructured data.
+A Python-based toolkit for scraping, vector indexing, and querying product and guide data. Ideal for building question-answering tools or recommendation systems utilizing both structured and unstructured data.
 
 🚀 Features
-Web scraping of product listings, washing guides, and transcripts.
+Web scraping of product listings, washing guides, and transcripts
 
-Vector indexing for retrieving semantically relevant information.
+Vector indexing for retrieving semantically relevant information
 
-Multiple backends supported: basic, LangGraph, and custom logic.
+Multiple backends supported: basic, LangGraph, and custom logic
 
-Validation and testing functionality for development.
+Validation and testing functionality for development
 
-Front‑end component for interactive querying.
+Front‑end component for interactive querying
 
 📂 Repository Structure
 bash
@@ -19,15 +19,15 @@ Edit
 tershine/
 ├── backend.py                # Main backend logic
 ├── backend_langgraph.py      # Backend alternative experimentation using LangGraph
-├── aiscrapesubquestion.py    # Testing Sub Question Decomposition from Big Question
+├── aiscrapesubquestion.py    # Testing sub-question decomposition from big question
 ├── extract_wg_links.py       # Extract washing guide URLs from Tershine webpage
 ├── get_products.py           # Scrape raw product data
-├── validation.py             # For testing purposes, can ignore.
-├── test.py                   # [Incomplete] Small experiment on fine tuning AI model on voice data from youtube video. 
-├── requirements.txt         # Python dependencies
-├── vector_index/            # Vector index data and helper code
-├── frontend/                # Web UI and assets for interaction
-├── *.txt/.json/.pyc         # Raw data dumps, transcripts, caches
+├── validation.py             # For testing purposes, can ignore
+├── test.py                   # [Incomplete] Experiment on fine-tuning AI model on voice data
+├── requirements.txt          # Python dependencies
+├── vector_index/             # Vector index data and helper code
+├── frontend/                 # Web UI and assets for interaction
+├── *.txt / *.json / *.pyc    # Raw data dumps, transcripts, caches
 └── .gitignore, .gitattributes
 🛠 Setup & Installation
 Clone the repo:
@@ -43,7 +43,7 @@ bash
 Copy
 Edit
 python3 -m venv .venv
-source .venv/bin/activate   # or .venv\Scripts\activate on Windows
+source .venv/bin/activate   # On Windows: .venv\Scripts\activate
 Install dependencies:
 
 bash
@@ -52,37 +52,37 @@ Edit
 pip install -r requirements.txt
 🔧 Usage
 1. Scrape Products & Guides
-get_products.py: identify and save product links/data.
+get_products.py: Identify and save product links/data
 
-extract_wg_links.py: extract washing-guide URLs from sources.
+extract_wg_links.py: Extract washing guide URLs from Tershine website
 
 2. Scrape & Process Datasets
-aiscrapesubquestion.py: extract sub-questions via AI from guides/transcripts.
+aiscrapesubquestion.py: Extract sub-questions via AI from guides/transcripts
 
-Raw data saved as .json or .txt in root or vector_index folder.
+Output is saved as .json or .txt in root or vector_index/
 
 3. Build Vector Index
-Run indexing scripts in vector_index/ (or via backend_langgraph).
+Run indexing scripts in vector_index/ or via backend_langgraph.py
 
-Populate vector store for semantic retrieval.
+This populates the vector store for semantic retrieval
 
 4. Query Interface
-backend.py: process queries through your preferred backend and vector index.
+backend.py: Main backend logic using your preferred method
 
-frontend/: serve a simple UI (likely with Flask or FastAPI + JS) that leverages backend API endpoints.
+frontend/: Serve the UI (Flask/FastAPI or JS) that queries the backend
 
 5. Testing & Validation
-validation.py: enforce input/output constraints.
+validation.py: Schema and constraint checks (optional)
 
-test.py: simple test harness; expand with pytest for full coverage.
+test.py: Initial testing setup (expand using pytest)
 
-🧪 Running the Front‑end
-Inside /frontend, review the framework (Flask, FastAPI, etc.) and run accordingly:
+🧪 Running the Frontend
+Inside the frontend/ folder:
 
 bash
 Copy
 Edit
 cd frontend
 pip install -r ../requirements.txt
-python app.py  # or npm/yarn if JS-based
-Visit http://localhost:<port> to ask questions, search products, or view guides.
+python app.py  # or use npm/yarn if frontend is JS-based
+Visit http://localhost:PORT in your browser to interact with the system.
