@@ -14,12 +14,6 @@ A Python-based toolkit for scraping, vector indexing, and querying product and g
   
 ---
 
-## 🚀 Project Visualization
-
-![GitDiagram](https://github.com/user-attachments/assets/2549b8e2-6029-44b5-a74a-54ad171d7ed3)
-
----
-
 ## 📂 Repository Structure
 
 ```
@@ -37,6 +31,11 @@ tershine/
 ├── *.txt / *.json / *.pyc    # Raw data dumps, transcripts, caches
 └── .gitignore, .gitattributes
 ```
+---
+
+## 📂 Code Structure and Flow Diagram
+
+![GitDiagram](https://github.com/user-attachments/assets/2549b8e2-6029-44b5-a74a-54ad171d7ed3)
 
 ---
 
