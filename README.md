@@ -94,9 +94,29 @@ Inside the `frontend/` folder:
 ```bash
 cd frontend
 pip install -r ../requirements.txt
-python app.py  # or use npm/yarn if frontend is JS-based
+streamlit run app.py
 ```
 
 Visit `http://localhost:<PORT>` in your browser to interact with the system.
+
+---
+
+## 🧪 Running the Backend
+
+Currently it is hosted on the Nytt Server where the backend REST API version is on BitBucket[https://bitbucket.org/weightfiles_nytt/tershineai/src]
+
+If running locally, uncomment 
+```python
+# # # Start FastAPI server
+# if __name__ == "__main__":
+#     import uvicorn
+#     uvicorn.run(app, host="0.0.0.0", port=8000)
+```
+
+then run
+```python
+python "backend.py"
+```
+and change the frontend BACKEND_URL="http://0.0.0.0:8000/carquery/"
 
 ---
